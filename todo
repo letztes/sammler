@@ -1,0 +1,16 @@
+
+
+$room nicht von quizbots message und die header variablen sollen nicht von einer manuellen user message sondern von der automatischen, regelmäßigen message belegt werden
+
+typo vermeiden, wenn zwei gleiche Zeichen dadurch getrennt würden, z.B. sollte "Bloom" nicht zu "Bolom" werden.
+
+Jede Kategorie auf zwei Dateien aufteilen: eine mit Fragen, die mit dem Buchstaben 'W' beginnen und eine für alle anderen Fragen.
+
+last_time bei jedem &sendanswer setzen, damit man im gathering mode mitquizzen kann
+
+away aufheben
+close befehl
+
+problem bei away: ign wird zu lang
+123.543.106.1665:061665
+123.543.116.0479:228

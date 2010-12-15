@@ -1,0 +1,9 @@
+
+open(INFILE, "sammler.pl.bak");
+open(OUTFILE, ">sammler.pl");
+while(<INFILE>) {
+    $_ =~ s/^(\s+)/$1$1/;
+    print OUTFILE $_;
+}
+close(INFILE);
+close(OUTFILE);
