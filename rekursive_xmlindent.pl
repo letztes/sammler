@@ -2,8 +2,8 @@ use warnings;
 use strict;
 
 my $directory = 'inventories/';
-opendir(INVENTORIES, $directory);
-my @files = readdir(INVENTORIES);
+opendir(INVENTORIES, $directory) or die $!;
+my @files = grep { m/xml$/ } sort readdir(INVENTORIES);
 closedir(INVENTORIES);
 
 foreach my $file (@files) {

@@ -1,4 +1,7 @@
+get http values Von get auf post ändern.
 
+Vor dem Vergleichen der vom Netzwerkgerät gelesenen Strings mit den aus der Datei gelesenen sowie vor dem Schreiben der Strings in die Datei die Strings mit uri_unescape() von escape-Zeichen bereinigen, sodass die Strings für Menschen lesbar sind. Mit uri_escape() brauchen die String nur dann codiert zu werden, wenn sie im active_mode auf das Netzwerkgerät geschrieben werden.
+Dafür müssten aber alle Strings in der Datei decodiert werden.
 
 $room nicht von quizbots message und die header variablen sollen nicht von einer manuellen user message sondern von der automatischen, regelmäßigen message belegt werden
 
@@ -14,3 +17,16 @@ close befehl
 problem bei away: ign wird zu lang
 123.543.106.1665:061665
 123.543.116.0479:228
+
+
+
+#
+done:
+
+* Add the script reformatter.pl, which reformats all the url-encoding in
+  the existing inventories. Useful when they change the url-encoding.
+* Modify the url-encoding in the sammler.pl script accordingly.
+* Add in sammler.pl to the subroutine &send_answer a regex that removes all
+  the hash signs from the answer string before sending
+* Add to the script rekursive_xmlindent.pl sorting and grepping the
+  xml files before indenting them

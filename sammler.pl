@@ -26,6 +26,9 @@ use XML::LibXML;
 # Global variables that control the behaviour of this script.
 ##########
 
+#my $DEVICE = 'eth0';
+my $DEVICE = 'wlan0';
+
 my $last_time_of_looking_up_answer;
 
 my $java_mode;
@@ -138,26 +141,27 @@ my $number_of_questions_in_inventory = 0;
 my $number_of_questions_in_current_category;
 my @items;
 
-my $inventories_directory = $ENV{'HOME'}.'/fragensammler/inventories/';
+my $inventories_directory = $ENV{'HOME'}.'/code/fragensammler/inventories/';
+#my $inventories_directory = 'inventories/';
 
-my %dom_of; # DOM of each inventory.
+my %DOM_OF; # DOM of each inventory.
 my %root_of;
 my %old_items_of;
 
 if (not -e $ENV{'HOME'}.
-  '/fragensammler/inventories/Computer/EDV.xml') {
-    if (not -e $ENV{'HOME'}.'/fragensammler/inventories/Computer/') {
-        if (not -e $ENV{'HOME'}.'/fragensammler/inventories/') {
-            if (not -e $ENV{'HOME'}.'/fragensammler/') {
-                mkdir $ENV{'HOME'}.'/fragensammler/';
+  '/code/fragensammler/inventories/Computer/EDV.xml') {
+    if (not -e $ENV{'HOME'}.'/code/fragensammler/inventories/Computer/') {
+        if (not -e $ENV{'HOME'}.'/code/fragensammler/inventories/') {
+            if (not -e $ENV{'HOME'}.'/code/fragensammler/') {
+                mkdir $ENV{'HOME'}.'/code/fragensammler/';
             }
-            mkdir $ENV{'HOME'}.'/fragensammler/inventories/';
+            mkdir $ENV{'HOME'}.'/code/fragensammler/inventories/';
         }
-        mkdir $ENV{'HOME'}.'/fragensammler/inventories/Computer/';
+        mkdir $ENV{'HOME'}.'/code/fragensammler/inventories/Computer/';
     }
     &make_new_dom('Computer/EDV');
-    $dom_of{'Computer/EDV'}->toFile($ENV{'HOME'}.
-      '/fragensammler/inventories/Computer/EDV.xml');
+    $DOM_OF{'Computer/EDV'}->toFile($ENV{'HOME'}.
+      '/code/fragensammler/inventories/Computer/EDV.xml');
 }
 opendir(INVENTORIES, $inventories_directory) or die $!;
 my @inventories = readdir(INVENTORIES) or die $!;
@@ -167,11 +171,11 @@ my $parser = XML::LibXML->new();
 foreach my $inventory (@inventories) {
     if ($inventory =~ m/^(.+)\.xml$/) {
         my $category_name = uri_unescape($1);
-        $dom_of{($category_name)} =
+        $DOM_OF{($category_name)} =
           $parser->parse_file($inventories_directory.$inventory) or die $!;
-        $dom_of{($category_name)}->setEncoding('UTF-8');
+        $DOM_OF{($category_name)}->setEncoding('UTF-8');
         $root_of{($category_name)} =
-          $dom_of{($category_name)}->documentElement();
+          $DOM_OF{($category_name)}->documentElement();
         @items = $root_of{($category_name)}->findnodes('//item');
         $number_of_questions_in_current_category = @items;
         $number_of_questions_in_inventory +=
@@ -184,10 +188,10 @@ foreach my $inventory (@inventories) {
 {
     my $inventory = 'Computer/EDV.xml';
     my $category_name = 'Computer/EDV';
-    $dom_of{($category_name)}
+    $DOM_OF{($category_name)}
     = $parser->parse_file($inventories_directory.$inventory) or die $!;
-    $dom_of{($category_name)}->setEncoding('UTF-8');
-    $root_of{($category_name)} = $dom_of{($category_name)}->documentElement();
+    $DOM_OF{($category_name)}->setEncoding('UTF-8');
+    $root_of{($category_name)} = $DOM_OF{($category_name)}->documentElement();
     @items = $root_of{($category_name)}->findnodes('//item');
     $number_of_questions_in_current_category = @items;
     $number_of_questions_in_inventory
@@ -277,7 +281,7 @@ sub write_to_file {
     $new_item_node->appendChild($new_answer_node);
 
     print "category: $category_to_write\n";
-    $dom_of{$category_to_write}->toFile($inventories_directory.
+    $DOM_OF{$category_to_write}->toFile($inventories_directory.
     "$category_to_write.xml",) or die $!;
 
 }
@@ -307,6 +311,33 @@ sub make_look_funny {
     return($string);
 }
 
+=head2
+
+The http stuff has changed. Its post now.
+
+
+..1...\7,......'._O+.c.P.#..
+...RR3.?POST /in HTTP/1.1
+Host: html.www.spin.de
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; de; rv:1.9.2.18) Gecko/20110628 Ubuntu/10.10 (maverick) Firefox/3.6.18
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 115
+Connection: keep-alive
+Content-Type: application/x-www-form-urlencoded; charset=UTF-8
+X-Requested-With: XMLHttpRequest
+Referer: http://html.www.spin.de/conn?sid=p6HFgatmes3qzXRttU41AQvIpNHXSx4BGlXyXzj3st6g6713057&port=3003&ign=1311017310740
+Content-Length: 118
+Cookie: loginid=3PlJAnKx4BG3pyXzj3st6g; __utma=1.132348816.1311016405.1311016405.1311016405.1; __utmc=1; __utmz=1.1311016405.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); settings=0000010000; session1=p6HFgatmes3qzXRttU41AQvIpNHXSx4BGlXyXzj3st6g6713057; session2=p6HFgatmes3qzXRttU41AQvIpNHXSx4BGlXyXzj3st6g6713057; design=0-0; setup=vhost=spin.de&url=%2Fhome
+Pragma: no-cache
+Cache-Control: no-cache
+
+sid=p6HFgatmes3qzXRttU41AQvIpNHXSx4BGlXyXzj3st6g6713057&port=3003&msg=gQuiz%23a%23Urknall%0A&snd=271&ign=1311023709742
+
+
+
+
+=cut
 
 sub extract_http_values {
     my $netpacket = shift;
@@ -385,13 +416,13 @@ sub extract_http_values {
         $session = $1;
     }
 #  print "$netpacket\n";
-    if ($netpacket =~ m!gQuiz[23]?#QuizBot[23]?#\d\d#a#!) {
+    if ($netpacket =~ m!gQuiz(?:\d|\%2050\%2B)?#QuizBot(?:\d|\%2050\%2B)?#\d\d#a#!) {
         $java_mode = 1;
-        die "
-        Fatal error:
-        Non-ASCII-characters can not be captured while Java enabled.
-        Disable Java in browser settings, restart browser and try again.
-        ";
+#        die "
+#        Fatal error:
+#        Non-ASCII-characters can not be captured while Java enabled.
+#        Disable Java in browser settings, restart browser and try again.
+#        ";
         if ($active_mode) {
             warn "
             Active mode not possible while connection established with Java
@@ -428,15 +459,15 @@ sub look_up_answer {
         return($answer);
     }
     else {
-        if (not exists $dom_of{$category}) {
+        if (not exists $DOM_OF{$category}) {
             &make_new_dom($category);
         }
         $old_items_of{$category} =
-          [$dom_of{$category}->findnodes('//item')];
+          [$DOM_OF{$category}->findnodes('//item')];
         foreach(@{$old_items_of{$category}}) {
             if (lc($_->findvalue('question')) eq lc($question)) {
                 $answer = $_->findvalue('answer');
-                if ($answer =~ m/%23(.+)%23/) {$answer = $1;}
+                if ($answer =~ m/#(.+)#/) {$answer = $1;}
                 print uri_unescape($answer);
                 print "\n";
                 # Delete the latter part of the answer string if it contains
@@ -457,18 +488,18 @@ sub look_up_answer {
 
 sub make_new_dom {
     my $category = shift;
-    $dom_of{$category} = XML::LibXML->createDocument("1.0", "UTF-8");
-    $dom_of{($category)}->setEncoding('UTF-8');
+    $DOM_OF{$category} = XML::LibXML->createDocument("1.0", "UTF-8");
+    $DOM_OF{($category)}->setEncoding('UTF-8');
     $root_of{$category} = XML::LibXML::Element->new('inventory');
-    $dom_of{($category)}->setDocumentElement( $root_of{$category} );
-    $root_of{$category} = $dom_of{$category}->documentElement();
+    $DOM_OF{($category)}->setDocumentElement( $root_of{$category} );
+    $root_of{$category} = $DOM_OF{$category}->documentElement();
 }
 
 
 sub extract_question {
     my $netpacket = shift;
     
-    if ($netpacket =~ m/Quiz[23]?%23QuizBot[23]?%23..%23a%23%5BFRAGE%5D%20(.+)%20%28Kategorie%3A%20(.+)%2C.+$/i) {
+    if ($netpacket =~ m/Quiz(?:\d|\%2050\%2B)?#QuizBot(?:\d|\%2050\%2B)?#..#a#%5BFRAGE%5D%20(.+)%20%28Kategorie:%20(.+)%2C.+$/i) {
     
         my $question = $1;
         my $category = uri_unescape($2);
@@ -484,7 +515,9 @@ sub extract_answer {
     
     my $answer = $netpacket;
     # remove the unnecessary leading and latter part of the answerstring
-    $answer =~ s/^.+Quiz[23]?%23QuizBot[23]?%23..%23a%23(?:Die%20Antwort%20lautet%3A%20)?|(?:%20ist%20richtig|<\/p>).+$//g;
+    $answer =~ s/^.+Quiz(?:\d|\%2050\%2B)?#QuizBot(?:\d|\%2050\%2B)?#..#a#//g;
+    $answer =~ s/^Die%20Antwort%20lautet%3A%20//g;
+    $answer =~ s/(?:%20ist%20richtig|<\/p>|&lt;\/p&gt;).*$//g;
     &write_to_file($category, $question, $answer);
     return undef;
 }
@@ -553,7 +586,7 @@ sub put_typos_into {
             my $character_to_append = int(rand(4));
             $string .= '%C3%B6' if $character_to_append eq 0; # ö: %C3%B6
             $string .= '%C3%A4' if $character_to_append eq 1; # ä: %C3%A4
-            $string .= '%23' if $character_to_append eq 2;    # #: %23
+            $string .= '#' if $character_to_append eq 2;    # #: #
             $string .= '%2B' if $character_to_append eq 3;    # +: %2B
             &send_answer($string);
             return 0;
@@ -576,7 +609,7 @@ sub put_typos_into {
 sub execute_command {
     my $reason;
     my $netpacket = shift;
-    if ($netpacket =~ m!>h(prozedur|motherbrain|kakophonia)%23\d+%23\d+%23a%23(.+)</p>!i) {
+    if ($netpacket =~ m!>h(prozedur|motherbrain|kakophonia)#\d+#\d+#a#(.+)</p>!i) {
         print "test\n";
         my $servant = $1;
         my $command = $2;
@@ -659,13 +692,13 @@ sub execute_command {
         }
         # do means to perform an action like joining or leaving a channel
         elsif ($command =~ m/^do%20(.+)/) {
-        # away pause: &msg=W1%23a%23pause%0AgQuiz3%230%23away%231%0A&snd
-        # away deakt: &msg=W2%23a%23     %0AgQuiz3%230%23away%230%0A&snd
+        # away pause: &msg=W1#a#pause%0AgQuiz3#0#away#1%0A&snd
+        # away deakt: &msg=W2#a#     %0AgQuiz3#0#away#0%0A&snd
         #
         # join Quiz:     &msg=oQuiz%0AcQuiz%0A&snd=16&ign=1235405012262
 		#                ...
 		#                &msg=jQuiz%0A&snd
-        # away pause: &msg=W1%23a%23pause%0AgQuiz3%230%23away%231%0A&snd
+        # away pause: &msg=W1#a#pause%0AgQuiz3#0#away#1%0A&snd
 
             $command = $1;
             print "command: $command\n";
@@ -681,11 +714,11 @@ sub execute_command {
             elsif ($command =~ m/away(?:%20(.+))?/) {
                 $reason = $1;
                 if ($reason) {
-                    $command = "W1%23a%23$reason%0Ag$room%230%23away%231";
-                    $command = "W1%23a%23$reason%0Ag$room%230%23away%231";
+                    $command = "W1#a#$reason%0Ag$room#0#away#1";
+                    $command = "W1#a#$reason%0Ag$room#0#away#1";
                 }
                 else {
-                    $command = "W2%23a%23%0Ag$room%230%23away%231";
+                    $command = "W2#a#%0Ag$room#0#away#1";
                 }
                 &send_command($command);
             }
@@ -776,6 +809,10 @@ sub send_command {
 sub send_answer {
     if (defined $cookie) {
     	my $answer = shift;
+    	
+    	# remove all the hash signs from the answer string before sending
+    	$answer =~ s/#//g;
+    	
     	print "$room\n";
         my ($seconds, $useconds) = gettimeofday();
         my $time = $seconds.$useconds;
@@ -810,7 +847,7 @@ sub send_answer {
 
 sub url_encode_customized {
       my $string = shift;
-      $string =~ s/([^\w.\-\/\~])/"%" . (sprintf("%2.2x",ord($1)))/eg;
+      $string =~ s/([^\w\.\-\/\~\#\:])/"%" . (sprintf("%2.2X",ord($1)))/eg;
       return $string;
 }
 
@@ -826,17 +863,20 @@ sub test_customized_encoder {
     # I don't know why the control characters do appear at the tail of
     # the strings. Must be something in the unescaping/encoding.
     # They suck.
-    $string =~ s/%0a//;
-    $customized_encoded_string =~ s/%0a//;
+    $string =~ s/%0a//i;
+    $customized_encoded_string =~ s/%0a//i;
     chomp($string);
     chomp($customized_encoded_string);
     
     if (lc($string) ne lc($customized_encoded_string)) {
         print "
         encodings do not match:
-        $string
-        $customized_encoded_string
+origninal: $string
+cust-enc:  $customized_encoded_string
         ";
+        print "they have changed the url-encoding.\n";
+        print "exit immediately.\n";
+        exit;
     }
     $string =~ s/(.)/$1\n/g;
     $customized_encoded_string =~ s/(.)/$1\n/g;
@@ -845,13 +885,13 @@ sub test_customized_encoder {
 
 sub generate_variable_interval {
     $interval = $interval_minimum + int(rand($interval_maximum-
-                                                                                        $interval_minimum));
+                                                   $interval_minimum));
     system("echo 'interval: $interval' >> log.txt");
 }
 
 
 sub main {
-    open(NETTRAFFIC, "sudo tcpdump -i eth0 -Aln host 193.254.186.182 or host 193.254.186.183 or host 194.112.167.227 or host 213.95.79.43 -s 0|") or die $!;
+    open(NETTRAFFIC, "sudo tcpdump -i $DEVICE -Aln host 193.254.186.182 or host 193.254.186.183 or host 194.112.167.227 or host 213.95.79.43 -s 0|") or die $!;
     my $question;
     my $category;
     my $answer;
@@ -861,7 +901,7 @@ sub main {
         &extract_http_values($_);
         &execute_command($_);
         my ($this_time_of_sending, $useconds) = gettimeofday();
-        if ($_ =~ m/(Quiz[23]?)%23QuizBot[23]?%23..%23a%23%5BFRAGE%5D%20.+%28Kategorie%3A%20.+%2C%20Punkte%3A/i){
+        if ($_ =~ m/(Quiz(?:\d|\%2050\%2B)?)#QuizBot(?:\d|\%2050\%2B)?#..#a#%5BFRAGE%5D%20.+%28Kategorie:%20.+%2C%20Punkte:/i){
             ($last_time_of_looking_up_answer, $useconds) = gettimeofday();
             &test_customized_encoder($_);
             $room = $1;
@@ -894,14 +934,14 @@ sub main {
                 } 
             }
         }
-        elsif ($_ =~ m/(Quiz[23]?).+(?:Antwort%20lautet|ist%20richtig)/
+        elsif ($_ =~ m/(Quiz(?:\d|\%2050\%2B)?).+(?:Antwort%20lautet|ist%20richtig)/
         and defined $category and not defined $answer) {
             &extract_answer($_, $category, $question) if $1 eq $room;
             $answer = undef;
         }
-        #&msg=hQuizBot%231%23c%23winkt%20zum%20Abschied%2E%0A
-        elsif ($_ =~ m!&msg=gQuiz[23]?%23[ac]%23winkt%20zum%20Abschied%2E%0A!
-        or $_ =~ m!%23\d+%23\d+%23a%23do%20quit!) {
+        #&msg=hQuizBot#1#c#winkt%20zum%20Abschied%2E%0A
+        elsif ($_ =~ m!&msg=gQuiz(?:\d|\%2050\%2B)?#[ac]#winkt%20zum%20Abschied%2E%0A!
+        or $_ =~ m!#\d+#\d+#a#do%20quit!) {
             last;
         }
         # In case sammler.pl is the only user in channel QuizBot will stop
