@@ -14,6 +14,9 @@
 use strict;
 use warnings;
 
+use feature 'say';
+
+use Data::Dumper;
 use Getopt::Long qw(:config bundling);
 use HTTP::Request::Common;
 use LWP;
@@ -26,7 +29,6 @@ use XML::LibXML;
 # Global variables that control the behaviour of this script.
 ##########
 
-#my $DEVICE = 'eth0';
 my $DEVICE = 'wlan0';
 
 my $last_time_of_looking_up_answer;
@@ -141,7 +143,7 @@ my $number_of_questions_in_inventory = 0;
 my $number_of_questions_in_current_category;
 my @items;
 
-my $inventories_directory = $ENV{'HOME'}.'/code/fragensammler/inventories/';
+my $inventories_directory = $ENV{'HOME'}.'/code/sammler/inventories/';
 #my $inventories_directory = 'inventories/';
 
 my %DOM_OF; # DOM of each inventory.
@@ -149,19 +151,19 @@ my %root_of;
 my %old_items_of;
 
 if (not -e $ENV{'HOME'}.
-  '/code/fragensammler/inventories/Computer/EDV.xml') {
-    if (not -e $ENV{'HOME'}.'/code/fragensammler/inventories/Computer/') {
-        if (not -e $ENV{'HOME'}.'/code/fragensammler/inventories/') {
-            if (not -e $ENV{'HOME'}.'/code/fragensammler/') {
-                mkdir $ENV{'HOME'}.'/code/fragensammler/';
+  '/code/sammler/inventories/Computer/EDV.xml') {
+    if (not -e $ENV{'HOME'}.'/code/sammler/inventories/Computer/') {
+        if (not -e $ENV{'HOME'}.'/code/sammler/inventories/') {
+            if (not -e $ENV{'HOME'}.'/code/sammler/') {
+                mkdir $ENV{'HOME'}.'/code/sammler/';
             }
-            mkdir $ENV{'HOME'}.'/code/fragensammler/inventories/';
+            mkdir $ENV{'HOME'}.'/code/sammler/inventories/';
         }
-        mkdir $ENV{'HOME'}.'/code/fragensammler/inventories/Computer/';
+        mkdir $ENV{'HOME'}.'/code/sammler/inventories/Computer/';
     }
     &make_new_dom('Computer/EDV');
     $DOM_OF{'Computer/EDV'}->toFile($ENV{'HOME'}.
-      '/code/fragensammler/inventories/Computer/EDV.xml');
+      '/code/sammler/inventories/Computer/EDV.xml');
 }
 opendir(INVENTORIES, $inventories_directory) or die $!;
 my @inventories = readdir(INVENTORIES) or die $!;
@@ -893,6 +895,7 @@ sub generate_variable_interval {
 sub main {
     open(NETTRAFFIC, "sudo tcpdump -i $DEVICE -Aln host 193.254.186.182 or host 193.254.186.183 or host 194.112.167.227 or host 213.95.79.43 -s 0|") or die $!;
     my $question;
+    my $previous_question = '';
     my $category;
     my $answer;
     my $still_waiting_for_sending = 1;
@@ -906,6 +909,8 @@ sub main {
             &test_customized_encoder($_);
             $room = $1;
             ($question, $category) = &extract_question($_);
+            next if $question eq $previous_question; # sometimes the same netpacket is read twice
+            $previous_question = $question;
             $answer = &look_up_answer($_, $category, $question);
             if (defined $answer) {
                 if ($lower_case and uri_unescape($answer) =~ m/^\D+$/) {
