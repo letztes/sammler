@@ -10,6 +10,12 @@
 #       * automatic join into quizchannel in case of eventual leaving.
 #       * variable, randomly selected standard messages like
 #         'mach hin bot'
+
+
+# Fragen erst uri_unescaped dann explizit erneut uri_escaped speichern.
+# Klartext ist nicht geeignet, weil XML-Entitys dann hin und her kodiert
+# werden müssen und die Zeichenkodierung durcheinander kommen koennte
+
   
 use strict;
 use warnings;
@@ -448,7 +454,7 @@ sub look_up_answer {
         $question = uri_unescape($question);
         $question =~ s/ =.+$//;
         $question =~ s/\^/\*\*/g;
-        $answer = eval($question);
+        $answer = eval($question); # eval strings from the internet with root privileges?
         print "\n\n";
         print $question;
         print "\n\n";
@@ -501,7 +507,7 @@ sub make_new_dom {
 sub extract_question {
     my $netpacket = shift;
     
-    if ($netpacket =~ m/Quiz(?:\d|\%2050\%2B)?#QuizBot(?:\d|\%2050\%2B)?#..#a#%5BFRAGE%5D%20(.+)%20%28Kategorie:%20(.+)%2C.+$/i) {
+    if ($netpacket =~ m/Quiz(?:\d|\%2050\%2B)?#QuizBot(?:\d|\%2050\%2B)?#..#a#%5BFRAGE%5D%20(.+)%20%28Kategorie:%20(.+)(?:,|%2C).+$/i) {
     
         my $question = $1;
         my $category = uri_unescape($2);
@@ -518,7 +524,7 @@ sub extract_answer {
     my $answer = $netpacket;
     # remove the unnecessary leading and latter part of the answerstring
     $answer =~ s/^.+Quiz(?:\d|\%2050\%2B)?#QuizBot(?:\d|\%2050\%2B)?#..#a#//g;
-    $answer =~ s/^Die%20Antwort%20lautet%3A%20//g;
+    $answer =~ s/^Die%20Antwort%20lautet(?:%3A|:)%20//g;
     $answer =~ s/(?:%20ist%20richtig|<\/p>|&lt;\/p&gt;).*$//g;
     &write_to_file($category, $question, $answer);
     return undef;
@@ -904,10 +910,16 @@ sub main {
         &extract_http_values($_);
         &execute_command($_);
         my ($this_time_of_sending, $useconds) = gettimeofday();
-        if ($_ =~ m/(Quiz(?:\d|\%2050\%2B)?)#QuizBot(?:\d|\%2050\%2B)?#..#a#%5BFRAGE%5D%20.+%28Kategorie:%20.+%2C%20Punkte:/i){
+        if ($_ =~ m/(Quiz(?:\d|\%2050\%2B)?)#QuizBot(?:\d|\%2050\%2B)?#..#a#%5BFRAGE%5D%20.+%28Kategorie:%20.+%20Punkte:/i){
+            $room = $1;
+            
+            # TODO: Ersetzungen von Zeichen, die die Channelbetreiber
+            # mal durch Entitys ersetzen und mal nicht, in extra Routine
+            # auslagern.
+            $_ =~ s/,/%2C/g;
+            
             ($last_time_of_looking_up_answer, $useconds) = gettimeofday();
             &test_customized_encoder($_);
-            $room = $1;
             ($question, $category) = &extract_question($_);
             next if $question eq $previous_question; # sometimes the same netpacket is read twice
             $previous_question = $question;

@@ -11,13 +11,15 @@ Make backups on your own. Examine the network. Write good regexes.
 use strict;
 use warnings;
 
+use URI::Escape;
 use XML::LibXML;
 
 my $DIRFH;
 my $READFH;
 my $WRITEFH;
 
-my $INVENTORIES_DIRECTORY = $ENV{'HOME'}.'/code/fragensammler/inventories/';
+my $INVENTORIES_DIRECTORY = $ENV{'HOME'}.'/code/sammler/inventories/';
+#my $INVENTORIES_DIRECTORY = $ENV{'HOME'}.'/code/sammler/test_inventory/';
 
 my $parser = new XML::LibXML;
 
@@ -31,7 +33,7 @@ foreach my $inventory (@INVENTORIES) {
     print "processing ( $i / $last ) $inventory\n";
         
     my $new_dom = XML::LibXML->createDocument("1.0", "UTF-8");
-    $new_dom->setEncoding('UTF-8');
+    #$new_dom->setEncoding('UTF-8');
     my $root_element = XML::LibXML::Element->new('inventory');
     $new_dom->setDocumentElement($root_element);
     $root_element = $new_dom->documentElement();
@@ -42,16 +44,8 @@ foreach my $inventory (@INVENTORIES) {
         my $question = $item->findvalue('question');
         my $answer = $item->findvalue('answer');
         
-        ######################################################################
-        ######################################################################
-        #
-        # Insert here the regexes to apply.
-        #
-        ######################################################################
-        ######################################################################
-        
-        $question =~ s/\%23/#/ig;
-        $question =~ s/\%3a/:/ig;
+        $question = uri_escape(uri_unescape($question));
+        $answer   = uri_escape(uri_unescape($answer));
         
         my $new_item_node = XML::LibXML::Element->new('item');
         $root_element->appendChild($new_item_node);
