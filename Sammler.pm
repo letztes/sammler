@@ -1,3 +1,13 @@
+=pod
+
+=head2 faq
+
+Q Perl module xyz is missing
+A Make sure the following are installed on a ubuntu machine:
+libmoosex-declare-perl libnet-pcap-perl libnetpacket-perl libxml-libxml-perl
+
+=cut
+
 package Sammler;
   
 use strict;
@@ -7,14 +17,11 @@ use feature 'say';
 
 use Data::Dumper;
 use File::Path qw(make_path);
-use HTTP::Request::Common;
-use LWP;
 use MooseX::Declare;
 use Net::Pcap;
 use NetPacket::Ethernet;
 use NetPacket::IP;
 use NetPacket::TCP;
-use Time::HiRes qw(gettimeofday);
 use URI::Escape;
 use XML::LibXML;
 
@@ -190,17 +197,21 @@ class Sammler {
                              
         my $sniffer 
             = Net::Pcap::open_live($self->device, $snaplen, $promisc, $timeout_ms, \$err);
+
+        if (defined $err) {
+            die 'Unable to open live device for ', $self->device, ' - ', $err;
+        }
         
         my $filter;
         Net::Pcap::compile($sniffer, \$filter,
             'host 193.254.186.182 or host 193.254.186.183 or host 194.112.167.227 or host 213.95.79.43',
             0, #do not optimize
             $netmask);
-            
+
         # Returns something that is not equal zero on error
         my $error_status = Net::Pcap::setfilter($sniffer, $filter);
         if ($error_status) {
-            die 'Unable to set packet capture filter';
+            die 'Unable to set packet capture filter. Error status: ' . $error_status;
         }
         
         return $sniffer;
@@ -310,65 +321,65 @@ class Sammler {
         my $category;
         my $answer;
         
-        PACKET: while (my $packet = Net::Pcap::next($self->sniffer, \%header)) {
-        
-            my $ether_data = NetPacket::Ethernet::strip($packet);
-            my $ip_data = NetPacket::IP::strip($ether_data);
+        while (1) {
+            PACKET: while (my $packet = Net::Pcap::next($self->sniffer, \%header)) {
             
-        
-            my $tcp_obj = NetPacket::TCP->decode($ip_data);
-            my $content = $tcp_obj->{'data'};
-            
-            $content = uri_unescape($content);
-            
-            # Process only messages from QuizBot
-            next if not $content =~ m/Quiz(?:\d| 50\+)?#QuizBot/ms;
-            
-            if (my ($next_question, $next_category) = $self->extract_question($content)) {
+                my $ether_data = NetPacket::Ethernet::strip($packet);
+                my $ip_data = NetPacket::IP::strip($ether_data);
                 
-                # sometimes the same netpacket is read twice
-                next PACKET if $next_question eq $previous_question;
-                $previous_question = $next_question;
+                my $tcp_obj = NetPacket::TCP->decode($ip_data);
+                my $content = $tcp_obj->{'data'};
                 
-                $question = $next_question;
-                $category = $next_category;
+                $content = uri_unescape($content);
                 
-                if (my $inventorized_answer = $self->lookup_answer({
-                        'question' => $question,
-                        'category' => $category,
-                    })) {
+                # Process only messages from QuizBot
+                next if not $content =~ m/Quiz(?:\d| 50\+)?#QuizBot/ms;
                 
-                    say $inventorized_answer;
+                if (my ($next_question, $next_category) = $self->extract_question($content)) {
                     
-                    # No need to inventorize them again.
-                    undef $question;
-                    undef $category;
+                    # sometimes the same netpacket is read twice
+                    next PACKET if $next_question eq $previous_question;
+                    $previous_question = $next_question;
+                    
+                    # Set the variables that get evaluated in the part
+                    # where the answer is extracted
+                    $question = $next_question;
+                    $category = $next_category;
+                    
+                    if (my $inventorized_answer = $self->lookup_answer({
+                            'question' => $question,
+                            'category' => $category,
+                        })) {
+                    
+                        say $inventorized_answer;
+                        
+                        # No need to inventorize them again.
+                        $question = undef;
+                        $category = undef;
+                    }
+                    
+                    next PACKET;
                 }
                 
-                next PACKET;
-            }
-            
-            if ($answer = $self->extract_answer($content)) {
-                
-                # Write to file only complete question-answer
-                # pairs.
-                if ($question
-                and $category
-                and $answer
-                and $category ne 'Rechenaufgabe') {
-                    $self->write_to_file({
-                        'question' => $question,
-                        'category' => $category,
-                        'answer'   => $answer,
-                    });
+                if ($answer = $self->extract_answer($content)) {
                     
-                    $self->answer_for->{ $question } = $answer;
-                    
+                    # Write to file only complete question-answer
+                    # pairs.
+                    if ($question
+                    and $category
+                    and $answer
+                    and $category ne 'Rechenaufgabe') {
+                        $self->write_to_file({
+                            'question' => $question,
+                            'category' => $category,
+                            'answer'   => $answer,
+                        });
+                        
+                        $self->answer_for->{ $question } = $answer;
+                    }
                 }
                     
-                say $answer;
             }
-                
         }
         
         return;

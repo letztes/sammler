@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 
-=head2
+=pod
+
+=DESCRIPTION
 
 Reformats the urlencoding of the inventory in case they change it.
 Overwrites the original files. Does not automatically any backups.
@@ -19,7 +21,6 @@ my $READFH;
 my $WRITEFH;
 
 my $INVENTORIES_DIRECTORY = $ENV{'HOME'}.'/code/sammler/inventories/';
-#my $INVENTORIES_DIRECTORY = $ENV{'HOME'}.'/code/sammler/test_inventory/';
 
 my $parser = new XML::LibXML;
 
@@ -33,7 +34,7 @@ foreach my $inventory (@INVENTORIES) {
     print "processing ( $i / $last ) $inventory\n";
         
     my $new_dom = XML::LibXML->createDocument("1.0", "UTF-8");
-    #$new_dom->setEncoding('UTF-8');
+
     my $root_element = XML::LibXML::Element->new('inventory');
     $new_dom->setDocumentElement($root_element);
     $root_element = $new_dom->documentElement();
@@ -47,6 +48,9 @@ foreach my $inventory (@INVENTORIES) {
         $question = uri_escape(uri_unescape($question));
         $answer   = uri_escape(uri_unescape($answer));
         
+
+        $answer =~ s/Die%20Antwort%20lautet:%20//;
+
         my $new_item_node = XML::LibXML::Element->new('item');
         $root_element->appendChild($new_item_node);
 
