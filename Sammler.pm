@@ -204,7 +204,7 @@ class Sammler {
         
         my $filter;
         Net::Pcap::compile($sniffer, \$filter,
-            'host 193.254.186.182 or host 193.254.186.183 or host 194.112.167.227 or host 213.95.79.43',
+            'host 2001:780:138:481::d55f:4f5d',
             0, #do not optimize
             $netmask);
 
